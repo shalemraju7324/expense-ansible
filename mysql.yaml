@@ -19,5 +19,5 @@
       login_host: mysql.shalem.site
 
   - name: print the output
-    ansible.buitlin.debug:
+    ansible.builtin.debug:
       msg: "MYSQL info: {{ mysql_info }}"
