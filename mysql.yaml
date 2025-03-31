@@ -20,4 +20,4 @@
 
   - name: print the output
     ansible.buitlin.debug:
-      msg: "MYSQL info: {{ mysql_info}}"
+      msg: "MYSQL info: {{ mysql_info }}"
