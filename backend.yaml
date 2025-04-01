@@ -31,4 +31,8 @@
     ansible.builtin.unarchieve:
     src: /tmp/backend.zip
     dest: /app
-    
+    remote_src: yes
+
+  - name: install dependencies
+    community.general.npm:
+      path: /app
