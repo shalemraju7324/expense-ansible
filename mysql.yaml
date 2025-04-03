@@ -1,47 +1,40 @@
-- name: Configure MySQL Server
+- name: configure mysql server
   hosts: mysql
   become: yes
   vars:
     mysql_root_password: ExpenseApp@1
   tasks:
+  - name: Install MySQL libraries
+    ansible.builtin.pip:
+      name: "{{ item }}"
+      executable: pip3.9
+    loop:
+    - cryptography
+    - PyMySQL
 
-    - name: Install MySQL libraries
-      ansible.builtin.pip:
-        name: "{{ item }}"
-        executable: pip3  # Fixed: Changed from pip3.9 to pip3
-      loop:
-        - cryptography
-        - PyMySQL
+  - name: Install MySQL server
+    ansible.builtin.package:
+      name: mysql-server
+      state: installed
 
-    - name: Install MySQL server
-      ansible.builtin.package:
-        name: mysql-server
-        state: present  # Fixed: 'installed' -> 'present'
+  - name: start and enable mysql server
+    ansible.builtin.service:
+      name: mysqld
+      state: started
+      enabled: yes
 
-    - name: Start and Enable MySQL Server
-      ansible.builtin.service:
-        name: mysqld
-        state: started
-        enabled: yes
+  - name: connect to mysql server
+    community.mysql.mysql_info:
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      login_host: mysql.shalem.site
+    register: mysql_info
+    ignore_errors: true
 
-    - name: Connect to MySQL server
-      community.mysql.mysql_info:
-        login_user: root
-        login_password: ExpenseApp@1
-        login_host: mysql.shalem.site
-      register: mysql_info
-      ignore_errors: true
+  - name: print the output
+    ansible.builtin.debug:
+      msg: "MySQL info: {{ mysql_info }}"
 
-    - name: Print the output
-      ansible.builtin.debug:
-        msg: "MySQL info: {{ mysql_info }}"
-
-    - name: Setup MySQL root password
-      community.mysql.mysql_user:
-        name: root
-        password: "{{ mysql_root_password }}"
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-        login_host: "localhost"
-        state: present
-      when: mysql_info.failed is true  # Fixed: Securely set the root password
+  - name: setup root password
+    ansible.builtin.command: " mysql_secure_installation --set-root-pass {{ mysql_root_password }} "
+    when: mysql_info.failed is true
